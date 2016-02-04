@@ -16,7 +16,7 @@ import static java.util.Collections.emptySet;
 
 
 /**
- * {@see Operation) that supports conditions and advanced observers.
+ * {@link Operation) that supports {@link Condition Conditions} and advanced {@link Observer Observers}.
  * <p>
  * Created by kdubb on 2/3/16.
  */
@@ -51,7 +51,6 @@ public class AdvancedOperation extends Operation {
     Executing,
     Finishing,
     Finished,
-
   }
 
 

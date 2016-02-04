@@ -1,28 +1,35 @@
-# reTXT's Advanced Java Concurrency Primitives
+Advanced Java Concurrency Primitives
 ---
 [![Build Status](https://travis-ci.org/reTXT/concurrency-java.png)](https://travis-ci.org/reTXT/concurrency-java) [![codecov.io](https://codecov.io/github/reTXT/concurrency-java/coverage.svg?branch=master)](https://codecov.io/github/reTXT/concurrency-java?branch=master)
 ---
-## Dispatch Queues (akin to Grand Central Dispatch)
+## Dispatch Queues
 ### Features
+* Functionally equivalent interface to [GCD](https://en.wikipedia.org/wiki/Grand_Central_Dispatch)
 * Global Dispatch Queues (High, Medium, Low, Main & UI)
 * Concurrent Dispatch Queues
 * Serial Dispatch Queues
 * Dispatch Queue Groups
 * Dispatch Barriers
-* Android Support
+* Android Support (currently requires [retrolambda](https://github.com/orfjackal/retrolambda))
 
 ### Implementation
 All dispatch queues are implemented in 100% pure java using the standard Java 7 concurrency primitives. Global & Concurrent dispatch queues are implemented using a common priority based thread pool. Serial dispatch queues are implemented on top of an existing dispatch queue.
 
-## Cocoa Advanced Operations
+## Operations & Operation Queues
 ### Features
-* Simple Operations
- * Same interface as NSOperation & NSOperationQueue
+* General Operations
+  * Same interface as Cocoa [NSOperation](https://developer.apple.com/library/ios/documentation/Cocoa/Reference/NSOperation_class/index.html) & [NSOperationQueue](https://developer.apple.com/library/ios/documentation/Cocoa/Reference/NSOperationQueue_class/index.html#//apple_ref/occ/cl/NSOperationQueue)
+  * Dependencies
+  * Cancellation
 * Advanced Operations
- * Very similar to those described in [WWDC 2015 - Session #226](https://developer.apple.com/videos/play/wwdc2015-226/)
- * Conditions - Required to bet met before operation can be executed
-   * Mutually Exclusion - Ensure only one instance of operations with this condition can execute simulataneously.
- * Finish & Cancel Error support
+  * Very similar to those described in [WWDC 2015 - Session #226](https://developer.apple.com/videos/play/wwdc2015-226/)
+  * Conditions - Required to bet met before operation can be executed
+    * Examples
+      * Mutually Exclusion - Ensure only one instance of operations with this condition can execute simulataneously
+      * No Cancelled Dependencies - Ensure operation executes only if no dependencies were cancelled
+      * Delay - Delay start of operation for a specific time period
+    * Easy creation of new conditions such as network reachability or UI modal exclusion
+  * Finish & cancel with errors
 
 ### Implementation
-All Operations and AdvancedOperations are implemented via the dispatch queues and there are 100% pure Java.
+All Operations and AdvancedOperations are implemented via the dispatch queues and therefore are 100% pure Java.
