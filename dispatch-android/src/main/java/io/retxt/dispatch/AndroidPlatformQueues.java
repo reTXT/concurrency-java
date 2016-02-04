@@ -1,8 +1,6 @@
-package io.retxt.dispatch.android;
+package io.retxt.dispatch;
 
 import android.os.Looper;
-import io.retxt.dispatch.DispatchQueue;
-import io.retxt.dispatch.PlatformQueues;
 
 
 

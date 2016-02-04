@@ -1,5 +1,7 @@
+package io.retxt.test.dispatch;
+
 import io.retxt.dispatch.DispatchQueues;
-import io.retxt.dispatch.android.LooperQueue;
+import io.retxt.dispatch.LooperQueue;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
