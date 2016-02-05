@@ -11,9 +11,30 @@ Advanced Java Concurrency Primitives
 * Dispatch Queue Groups
 * Dispatch Barriers
 * Android Support (currently requires [retrolambda](https://github.com/orfjackal/retrolambda))
-
 ### Implementation
 All dispatch queues are implemented in 100% pure java using the standard Java 7 concurrency primitives. Global & Concurrent dispatch queues are implemented using a common priority based thread pool. Serial dispatch queues are implemented on top of an existing dispatch queue.
+
+### Availability
+Maven (snapshots in oss.jfrog.org & oss.sonatype.org)
+```
+  <dependency>
+      <groupId>io.retxt.concurrency</groupId>
+      <artifactId>dispatch</artifactId>
+      <version>${version}</version>
+  </dependency>
+  <!-- Optional Android support -->
+  <dependency>
+      <groupId>io.retxt.concurrency</groupId>
+      <artifactId>dispatch-android</artifactId>
+      <version>${version}</version>
+  </dependency>
+```
+Gradle
+```
+io.retxt.concurrency:dispatch:${version}
+// Optional Android support
+io.retxt.concurrency:dispatch-android:${version}
+```
 
 ## Operations & Operation Queues
 ### Features
@@ -33,3 +54,18 @@ All dispatch queues are implemented in 100% pure java using the standard Java 7 
 
 ### Implementation
 All Operations and AdvancedOperations are implemented via the dispatch queues and therefore are 100% pure Java.
+
+### Availability
+Maven (snapshots in oss.jfrog.org & oss.sonatype.org)
+```
+  <dependency>
+      <groupId>io.retxt.concurrency</groupId>
+      <artifactId>operations</artifactId>
+      <version>${version}</version>
+  </dependency>
+
+```
+Gradle
+```
+io.retxt.concurrency:operations:${version}
+```
