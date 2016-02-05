@@ -5,3 +5,4 @@ before_script:
   - pip install --user codecov
 after_success:
   - codecov
+  - mvn deploy --settings ./.travis/maven-settings.xml
