@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Note: executeAfter uses Thread.sleep to achieve the requisite delay.
  * <p>
- * Note: execute & executeSync are essentially the same and block the calling thread.
+ * Note: execute &amp; executeSync are essentially the same and block the calling thread.
  * <p>
  * Created by kdubb on 9/2/14.
  */

@@ -16,7 +16,7 @@ import static java.util.Collections.emptySet;
 
 
 /**
- * {@link Operation) that supports {@link Condition Conditions} and advanced {@link Observer Observers}.
+ * {@link Operation} that supports {@link Condition Conditions} and advanced {@link Observer Observers}.
  * <p>
  * Created by kdubb on 2/3/16.
  */

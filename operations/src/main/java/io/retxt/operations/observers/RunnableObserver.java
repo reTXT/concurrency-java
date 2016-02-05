@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 
 
 /**
- * Adapts {@link Runnable Runnables} to an {@link AdvancedOperation.Observer) object.
+ * Adapts {@link Runnable Runnables} to an {@link AdvancedOperation.Observer} object.
  *
  * Created by kdubb on 2/3/16.
  */

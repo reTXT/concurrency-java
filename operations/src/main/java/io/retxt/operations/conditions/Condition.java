@@ -67,14 +67,14 @@ public abstract class Condition {
    * operation is executed first. Use this method to return an operation that
    * (for example) asks for permission to perform the operation
    *
-   * @param operation The `Operation` to which the Condition has been added.
-   *
-   * @return An `Operation`, if a dependency should be automatically added. Otherwise, null.
-   *
-   * @apiNote Only a single operation may be returned as a dependency. If you
+   * Note: Only a single operation may be returned as a dependency. If you
    * find that you need to return multiple operations, then you should be
    * expressing that as multiple conditions. Alternatively, you could return
    * a single `GroupOperation` that executes multiple operations internally.
+   *
+   * @param operation The `Operation` to which the Condition has been added.
+   *
+   * @return An `Operation`, if a dependency should be automatically added. Otherwise, null.
    */
   public abstract Operation dependencyForOperation(AdvancedOperation operation);
 

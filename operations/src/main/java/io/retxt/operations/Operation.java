@@ -12,7 +12,7 @@ import static java.util.Collections.synchronizedCollection;
 
 
 /**
- * Operation that supports dependencies & execution on an OperationQueue
+ * Operation that supports dependencies &amp; execution on an OperationQueue
  * <p>
  * Created by kdubb on 1/28/16.
  */
