@@ -5,4 +5,5 @@ before_script:
   - pip install --user codecov
 after_success:
   - codecov
-  - mvn deploy -DskipTests=true --settings ./.travis/maven-settings.xml
+  - mvn deploy -DskipTests=true -POJO --settings ./.travis/maven-settings.xml
+  - mvn deploy -DskipTests=true -PSONATYPE --settings ./.travis/maven-settings.xml
