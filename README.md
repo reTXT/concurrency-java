@@ -36,6 +36,29 @@ io.retxt.concurrency:dispatch:${version}
 io.retxt.concurrency:dispatch-android:${version}
 ```
 
+## Promises
+### Features
+* Similar interface and implementation to [PromiseKit](https://github.com/mxcl/PromiseKit)
+* Defaults to executing on main queue but easily redirectable to a specific or background queue
+
+### Implementation
+Promises are implemented via the dispatch queues are there are 100% pure Java and provide tight integration with Operations as well.
+
+### Availability
+Maven (snapshots in oss.jfrog.org & oss.sonatype.org)
+```
+  <dependency>
+      <groupId>io.retxt.concurrency</groupId>
+      <artifactId>promise</artifactId>
+      <version>${version}</version>
+  </dependency>
+```
+Gradle
+```
+io.retxt.concurrency:dispatch:${version}
+```
+
+
 ## Operations & Operation Queues
 ### Features
 * General Operations
@@ -53,7 +76,7 @@ io.retxt.concurrency:dispatch-android:${version}
   * Finish & cancel with errors
 
 ### Implementation
-All Operations and AdvancedOperations are implemented via the dispatch queues and therefore are 100% pure Java.
+All Operations and AdvancedOperations are implemented via the dispatch queues and therefore are 100% pure Java and provide tight integration with Promises as well.
 
 ### Availability
 Maven (snapshots in oss.jfrog.org & oss.sonatype.org)
