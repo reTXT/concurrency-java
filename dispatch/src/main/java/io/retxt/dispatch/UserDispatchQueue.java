@@ -3,7 +3,7 @@ package io.retxt.dispatch;
 /**
  * Created by kdubb on 2/3/16.
  */
-public interface PrivateDispatchQueue extends DispatchQueue {
+public interface UserDispatchQueue extends DispatchQueue {
 
   boolean isSuspended();
 

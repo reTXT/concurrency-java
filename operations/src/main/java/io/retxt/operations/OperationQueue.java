@@ -1,7 +1,7 @@
 package io.retxt.operations;
 
 import io.retxt.dispatch.ConcurrentDispatchQueue;
-import io.retxt.dispatch.PrivateDispatchQueue;
+import io.retxt.dispatch.UserDispatchQueue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -23,14 +23,14 @@ public class OperationQueue {
 
   private static final Logger logger = LogManager.getLogger();
 
-  private PrivateDispatchQueue executionQueue;
+  private UserDispatchQueue executionQueue;
   private Collection<Operation> queuedOperations = synchronizedCollection(new HashSet<>());
 
   public OperationQueue() {
     this(new ConcurrentDispatchQueue(Thread.NORM_PRIORITY));
   }
 
-  public OperationQueue(PrivateDispatchQueue dispatchQueue) {
+  public OperationQueue(UserDispatchQueue dispatchQueue) {
     this.executionQueue = dispatchQueue;
   }
 
