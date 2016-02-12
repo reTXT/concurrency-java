@@ -3,7 +3,6 @@ package io.retxt.dispatch;
 import android.os.Handler;
 import android.os.Looper;
 
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 
@@ -22,12 +21,12 @@ public class LooperQueue extends InternalDispatchQueue {
   }
 
   @Override
-  public void execute(Runnable task) {
+  public void _execute(Runnable task) {
     handler.post(task);
   }
 
   @Override
-  public void executeAfter(long time, TimeUnit timeUnit, Runnable task) {
+  public void _executeAfter(long time, TimeUnit timeUnit, Runnable task) {
     handler.postDelayed(task, timeUnit.toMillis(time));
   }
 

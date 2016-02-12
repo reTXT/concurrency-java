@@ -5,6 +5,7 @@ import io.retxt.dispatch.InternalDispatchQueue.QueuedTask.Listener;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -18,7 +19,7 @@ import static com.google.common.base.Preconditions.checkArgument;
  * <p>
  * Created by kdubb on 1/31/16.
  */
-public class ConcurrentDispatchQueue extends InternalDispatchQueue implements PrivateDispatchQueue {
+public class ConcurrentDispatchQueue extends InternalDispatchQueue implements UserDispatchQueue {
 
   private int priority;
   private ConcurrentLinkedQueue<QueuedTask> pauseQueue = new ConcurrentLinkedQueue<>();
@@ -31,16 +32,16 @@ public class ConcurrentDispatchQueue extends InternalDispatchQueue implements Pr
     this.priority = priority;
   }
 
-  private void execute(QueuedTask task) {
+  protected void _execute(Runnable task) {
 
     if(suspended.get()) {
 
-      pauseQueue.add(task);
+      pauseQueue.add((QueuedTask) task);
 
     }
     else if(barrier.enabled.get()) {
 
-      barrierQueue.add(task);
+      barrierQueue.add((QueuedTask) task);
 
     }
     else {
@@ -52,11 +53,19 @@ public class ConcurrentDispatchQueue extends InternalDispatchQueue implements Pr
 
   @Override
   public void execute(Runnable task) {
-    execute(new QueuedTask(task, priority, barrier.checkingListener));
+    _execute(new QueuedTask(task, priority, barrier.notifyingListener));
   }
 
   public void executeBarrier(Runnable task) {
-    execute(new QueuedTask(task, priority, barrier.blockingListener));
+    _execute(new QueuedTask(task, priority, barrier.blockingListener));
+  }
+
+  public void executeBarrierSync(Runnable task) {
+    executeSync(new QueuedTask(task, priority, barrier.blockingListener));
+  }
+
+  public void executeBarrierSync(long timeout, TimeUnit timeUnit, Runnable task) {
+    executeSync(timeout, timeUnit, new QueuedTask(task, priority, barrier.blockingListener));
   }
 
   @Override
@@ -87,14 +96,14 @@ public class ConcurrentDispatchQueue extends InternalDispatchQueue implements Pr
 
     ReentrantLock lock = new ReentrantLock();
     Condition passCondition = lock.newCondition();
-    Set<QueuedTask> registerdTasks = new ConcurrentSkipListSet<>();
+    Set<QueuedTask> registeredTasks = new ConcurrentSkipListSet<>();
     AtomicBoolean enabled = new AtomicBoolean(false);
 
-    Listener checkingListener = new Listener() {
+    Listener notifyingListener = new Listener() {
 
       @Override
       public void scheduled(QueuedTask task) {
-        registerdTasks.add(task);
+        registeredTasks.add(task);
       }
 
       @Override
@@ -127,14 +136,18 @@ public class ConcurrentDispatchQueue extends InternalDispatchQueue implements Pr
     };
 
     public void passed(QueuedTask task) {
-      registerdTasks.remove(task);
+
+      registeredTasks.remove(task);
+
       lock.lock();
+
       try {
         passCondition.signalAll();
       }
       finally {
         lock.unlock();
       }
+
     }
 
     public void enable() {
@@ -146,11 +159,12 @@ public class ConcurrentDispatchQueue extends InternalDispatchQueue implements Pr
 
         for(; ; ) {
 
-          if(registerdTasks.isEmpty()) {
+          if(registeredTasks.isEmpty()) {
             return;
           }
 
           passCondition.awaitUninterruptibly();
+
         }
 
       }

@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * <p>
  * Created by kdubb on 11/21/14.
  */
-public class SerialDispatchQueue extends InternalDispatchQueue implements PrivateDispatchQueue {
+public class SerialDispatchQueue extends InternalDispatchQueue implements UserDispatchQueue {
 
   private static final Logger logger = LogManager.getLogger();
 
@@ -29,7 +29,7 @@ public class SerialDispatchQueue extends InternalDispatchQueue implements Privat
   }
 
   @Override
-  public void execute(Runnable task) {
+  public void _execute(Runnable task) {
 
     taskQueue.add(task);
 

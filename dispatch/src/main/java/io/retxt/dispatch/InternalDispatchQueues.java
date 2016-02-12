@@ -38,24 +38,48 @@ abstract class InternalDispatchQueue implements DispatchQueue {
 
   static ThreadPoolExecutor executor = createExecutor();
 
-  @Override
-  public void executeAfter(long time, TimeUnit timeUnit, Runnable task) {
+  protected abstract void _execute(Runnable runnable);
+
+  protected void _executeAfter(long time, TimeUnit timeUnit, Runnable task) {
     scheduledService.schedule(() -> this.execute(task), time, timeUnit);
   }
 
   @Override
-  public void executeSync(Runnable runnable) throws InterruptedException {
-    _executeSync(runnable).await();
+  public void execute(Runnable runnable) {
+    _execute(runnable);
   }
 
   @Override
-  public boolean executeSync(long timeout, TimeUnit timeUnit, Runnable runnable) throws InterruptedException {
-    return _executeSync(runnable).await(timeout, timeUnit);
+  public void executeAfter(long time, TimeUnit timeUnit, Runnable task) {
+    _executeAfter(time, timeUnit, task);
+  }
+
+  @Override
+  public void executeSync(Runnable runnable) {
+    while(true) {
+      try {
+        _executeSync(runnable).await();
+        return;
+      }
+      catch(InterruptedException ignored) {
+      }
+    }
+  }
+
+  @Override
+  public boolean executeSync(long timeout, TimeUnit timeUnit, Runnable runnable) {
+    while(true) {
+      try {
+        return _executeSync(runnable).await(timeout, timeUnit);
+      }
+      catch(InterruptedException ignored) {
+      }
+    }
   }
 
   private CountDownLatch _executeSync(Runnable runnable) {
     CountDownLatch completionLatch = new CountDownLatch(1);
-    execute(() -> {
+    _execute(() -> {
       try {
         runnable.run();
       }
@@ -146,11 +170,12 @@ abstract class InternalDispatchQueue implements DispatchQueue {
 
 
     private static AtomicLong currentSequence = new AtomicLong();
-    Runnable work;
 
-    Integer priority;
-    Long sequence;
-    Listener listener;
+    protected Runnable work;
+
+    protected Integer priority;
+    protected Long sequence;
+    protected Listener listener;
 
     QueuedTask(Runnable work, int priority, Listener listener) {
       this.work = work;
@@ -217,7 +242,7 @@ class GlobalDispatchQueue extends InternalDispatchQueue implements DispatchQueue
   }
 
   @Override
-  public void execute(Runnable runnable) {
+  public void _execute(Runnable runnable) {
     executor.execute(new QueuedTask(runnable, priority.getThreadPriority(), null));
   }
 

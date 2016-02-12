@@ -12,9 +12,9 @@ import java.util.concurrent.TimeUnit;
  */
 public interface DispatchQueue extends Executor {
 
-  void executeSync(Runnable task) throws InterruptedException;
+  void executeSync(Runnable task);
 
-  boolean executeSync(long timeout, TimeUnit timeUnit, Runnable task) throws InterruptedException;
+  boolean executeSync(long timeout, TimeUnit timeUnit, Runnable task);
 
   void execute(Runnable task);
 

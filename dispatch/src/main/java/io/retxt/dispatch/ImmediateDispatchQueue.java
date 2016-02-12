@@ -16,23 +16,23 @@ import java.util.concurrent.TimeUnit;
 public class ImmediateDispatchQueue implements DispatchQueue {
 
   @Override
-  public void executeSync(Runnable task) throws InterruptedException {
+  public void executeSync(Runnable task) {
     task.run();
   }
 
   @Override
-  public boolean executeSync(long timeout, TimeUnit timeUnit, Runnable task) throws InterruptedException {
+  public boolean executeSync(long timeout, TimeUnit timeUnit, Runnable task) {
     task.run();
     return true;
   }
 
   @Override
-  public void execute(Runnable runnable) {
-    runnable.run();
+  public void execute(Runnable task) {
+    task.run();
   }
 
   @Override
-  public void executeAfter(long delay, TimeUnit unit, Runnable runnable) {
+  public void executeAfter(long delay, TimeUnit unit, Runnable task) {
 
     try {
       Thread.sleep(unit.toMillis(delay));
@@ -41,7 +41,7 @@ public class ImmediateDispatchQueue implements DispatchQueue {
 
     }
 
-    runnable.run();
+    task.run();
   }
 
 }
