@@ -13,6 +13,7 @@
         <module>dispatch</module>
         <module>dispatch-android</module>
         <module>operations</module>
+        <module>promise</module>
     </modules>
 
     <properties>
