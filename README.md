@@ -55,7 +55,7 @@ Maven (snapshots in oss.jfrog.org & oss.sonatype.org)
 ```
 Gradle
 ```
-io.retxt.concurrency:dispatch:${version}
+io.retxt.concurrency:promise:${version}
 ```
 
 
