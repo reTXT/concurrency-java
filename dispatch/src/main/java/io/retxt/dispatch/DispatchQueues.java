@@ -16,7 +16,7 @@ import static com.google.common.collect.Iterables.getFirst;
 public class DispatchQueues {
 
   private static PlatformQueues platformQueues =
-      getFirst(ServiceLoader.load(PlatformQueues.class), new NullPlatformQueues());
+      getFirst(ServiceLoader.load(PlatformQueues.class), new DefaultPlatformQueues());
 
   static {
     if(platformQueues == null) {
