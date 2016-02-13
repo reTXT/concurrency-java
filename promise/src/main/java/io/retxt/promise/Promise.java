@@ -4,10 +4,8 @@ import com.google.common.base.Optional;
 import io.retxt.dispatch.ConcurrentDispatchQueue;
 import io.retxt.dispatch.DispatchQueue;
 import io.retxt.dispatch.DispatchQueues;
-import io.retxt.promise.Seal.Discriminator;
 import io.retxt.promise.functions.*;
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.message.ObjectArrayMessage;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,8 +49,8 @@ public class Promise<P> {
    * use common patterns. For example:
    * <p>
    * <pre>
-   * Promise<Image> fetchKitten() {
-   *   return new Promise<>(resolve -> {
+   * Promise&lt;Image&gt; fetchKitten() {
+   *   return new Promise&lt;&gt;(resolve -&gt; {
    *     KittenFetcher.fetchWithCompletionBlock(resolve)
    *   });
    * }
@@ -87,9 +85,9 @@ public class Promise<P> {
    * The closure you pass is executed immediately on the calling thread.
    * <p>
    * <pre>
-   * Promise<Image> fetchKitten() {
-   *   return new Promise<>((fulfill, reject) -> {
-   *     KittenFetcher.fetchWithCompletion((img, err) -> {
+   * Promise&lt;Image&gt; fetchKitten() {
+   *   return new Promise&lt;&gt;((fulfill, reject) -&gt; {
+   *     KittenFetcher.fetchWithCompletion((img, err) -&gt; {
    *       if(err == null) {
    *         fulfill.call(img);
    *       }

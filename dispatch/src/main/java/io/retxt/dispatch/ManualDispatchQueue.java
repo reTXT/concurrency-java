@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 
 /**
- * A dispatch queue that requires manual draining via {@see #drain}.
+ * A dispatch queue that requires manual draining via {@link #drain}.
  * <p>
  * Useful for queues that need to always run from a specific thread when that thread is controlled by some other
  * process. A classic example is the implementation of a "main" thread queue by periodically calling drainAvailable
