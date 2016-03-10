@@ -63,7 +63,7 @@ public class PromiseTest {
       values.add((Integer) value);
     });
 
-    assertThat(Promises.await(p, 1, SECONDS), is(5));
+    assertThat(Promises.asFuture(p).get(1, SECONDS), is(5));
     assertThat(values, is(asList(1, 2, 3, 4, 5)));
   }
 
@@ -106,7 +106,7 @@ public class PromiseTest {
       values.add(9);
     });
 
-    assertThat(Promises.await(p, 1, SECONDS), is(100));
+    assertThat(Promises.asFuture(p).get(1, SECONDS), is(100));
     assertThat(values, is(asList(1, 2, 3, 4, 5, 6, 7, 8, 9)));
   }
 

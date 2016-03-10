@@ -6,10 +6,9 @@ import io.retxt.promise.functions.Function;
 import io.retxt.promise.functions.Sealant;
 import io.retxt.promise.functions.Supplier;
 
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 
 
@@ -64,36 +63,11 @@ public class Promises {
     return dispatch(DispatchQueues.MEDIUM, body);
   }
 
-  @SuppressWarnings("unchecked")
-  public static <P> P await(Promise<P> promise) throws Throwable {
-    CountDownLatch latch = new CountDownLatch(1);
-    AtomicReference<Object> value = new AtomicReference<>();
-    promise.always(val -> {
-      value.set(val);
-      latch.countDown();
-    });
-    latch.await();
-    if(value.get() instanceof Throwable) {
-      throw (Throwable) value.get();
-    }
-    return (P) value.get();
-  }
-
-  @SuppressWarnings("unchecked")
-  public static <P> P await(Promise<P> promise, long timeout, TimeUnit timeUnit) throws Throwable {
-    CountDownLatch latch = new CountDownLatch(1);
-    AtomicReference<Object> value = new AtomicReference<>();
-    promise.always(val -> {
-      value.set(val);
-      latch.countDown();
-    });
-    if(!latch.await(timeout, timeUnit)) {
-      throw new CancellationException();
-    }
-    if(value.get() instanceof Throwable) {
-      throw (Throwable) value.get();
-    }
-    return (P) value.get();
+  public static <P> Future<P> asFuture(Promise<P> source) {
+    CompletableFuture<P> future = new CompletableFuture<>();
+    source.then(future::complete);
+    source.error(future::completeExceptionally);
+    return future;
   }
 
 }
