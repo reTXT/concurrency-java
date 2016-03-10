@@ -175,7 +175,7 @@ public class Promise<P> {
   public Promise<P> then(DispatchQueue on, Consumer<P> body) {
     return new Promise<>(this, (resolution, resolve) -> {
       if(resolution.isFulfilled()) {
-        on.execute(() -> {
+        on.dispatch(() -> {
           try {
             body.consume(resolution.getFulfilled());
             resolve.call(Resolution.fulfilled(resolution.getFulfilled()));
@@ -202,7 +202,7 @@ public class Promise<P> {
   public <Q> Promise<Q> filter(DispatchQueue on, Filter<P, Q> body) {
     return new Promise<>(this, (resolution, resolve) -> {
       if(resolution.isFulfilled()) {
-        on.execute(() -> {
+        on.dispatch(() -> {
           try {
             resolve.call(Resolution.fulfilled(body.filter(resolution.getFulfilled())));
           }
@@ -228,7 +228,7 @@ public class Promise<P> {
   public <Q> Promise<Q> pipe(DispatchQueue on, Pipe<P, Q> body) {
     return new Promise<>(this, (resolution, resolve) -> {
       if(resolution.isFulfilled()) {
-        on.execute(() -> {
+        on.dispatch(() -> {
           try {
             Promise<Q> promise = body.pipe(resolution.getFulfilled());
             if(promise == this) {
@@ -260,7 +260,7 @@ public class Promise<P> {
     _pipe(resolution -> {
       if(resolution.isRejected()) {
         if(policy == ErrorPolicy.All || !(resolution.getRejected() instanceof CancellationException)) {
-          DispatchQueues.MAIN.execute(() -> body.handle(resolution.getRejected()));
+          DispatchQueues.MAIN.dispatch(() -> body.handle(resolution.getRejected()));
         }
       }
     });
@@ -276,7 +276,7 @@ public class Promise<P> {
         resolve.call(resolution);
       }
       else {
-        on.execute(() -> {
+        on.dispatch(() -> {
           try {
             Promise<P> promise = body.pipe(resolution.getRejected());
             if(promise != this) {
@@ -302,7 +302,7 @@ public class Promise<P> {
         resolve.call(resolution);
       }
       else {
-        on.execute(() -> {
+        on.dispatch(() -> {
           try {
             resolve.call(Resolution.fulfilled(body.filter(resolution.getRejected())));
           }
@@ -320,7 +320,7 @@ public class Promise<P> {
 
   public Promise<P> always(DispatchQueue on, Consumer<Object> body) {
     return new Promise<>(this, (resolution, resolve) -> {
-      on.execute(() -> {
+      on.dispatch(() -> {
         try {
           @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
           Object value = resolution.isFulfilled() ? resolution.getFulfilled() : resolution.getRejected();
@@ -464,7 +464,7 @@ class UnsealedState<P> implements State<P> {
     seal = new Seal<>(new ArrayList<>());
     resolverResult.set(resolution -> {
       final AtomicReference<Collection<Function<P>>> handlers = new AtomicReference<>();
-      sync.executeBarrierSync(() -> {
+      sync.dispatchBarrierSync(() -> {
         if(seal.isPending()) {
           handlers.set(seal.getPending());
           seal.setResolved(resolution);
@@ -481,7 +481,7 @@ class UnsealedState<P> implements State<P> {
   @Override
   public Optional<P> get() {
     final AtomicReference<P> result = new AtomicReference<>();
-    sync.executeSync(() -> {
+    sync.dispatchSync(() -> {
       if(seal.isResolved()) {
         result.set(seal.getResolved());
       }
@@ -492,9 +492,9 @@ class UnsealedState<P> implements State<P> {
   @Override
   public void get(Function<Seal<P>> body) {
     AtomicBoolean sealed = new AtomicBoolean();
-    sync.executeSync(() -> sealed.set(seal.isResolved()));
+    sync.dispatchSync(() -> sealed.set(seal.isResolved()));
     if(!sealed.get()) {
-      sync.executeBarrierSync(() -> {
+      sync.dispatchBarrierSync(() -> {
         if(seal.isPending()) {
           body.call(seal);
         }

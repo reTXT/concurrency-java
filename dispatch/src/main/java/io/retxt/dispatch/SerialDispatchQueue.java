@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Serial dispatch queue
  * <p>
- * Executes tasks in sequentially in FIFO order on a target dispatch queue.
+ * Executes blocks in sequentially in FIFO order on a target dispatch queue.
  * <p>
  * Created by kdubb on 11/21/14.
  */
@@ -20,7 +20,7 @@ public class SerialDispatchQueue extends InternalDispatchQueue implements UserDi
   private static final Logger logger = LogManager.getLogger();
 
   private DispatchQueue target;
-  private ConcurrentLinkedQueue<Runnable> taskQueue = new ConcurrentLinkedQueue<>();
+  private ConcurrentLinkedQueue<Block> blockQueue = new ConcurrentLinkedQueue<>();
   private AtomicBoolean suspended = new AtomicBoolean(false);
   private boolean dispatching = false;
 
@@ -29,9 +29,9 @@ public class SerialDispatchQueue extends InternalDispatchQueue implements UserDi
   }
 
   @Override
-  public void _execute(Runnable task) {
+  public void _dispatch(Block block) {
 
-    taskQueue.add(task);
+    blockQueue.add(block);
 
     if(suspended.get()) {
       return;
@@ -61,15 +61,15 @@ public class SerialDispatchQueue extends InternalDispatchQueue implements UserDi
 
   }
 
-  synchronized void ensureDispatching() {
+  private synchronized void ensureDispatching() {
 
-    if(!dispatching && !taskQueue.isEmpty()) {
+    if(!dispatching && !blockQueue.isEmpty()) {
 
       logger.trace("Restarting dispatcher");
 
       dispatching = true;
 
-      target.execute(this::dispatch);
+      target.dispatch(this::dispatch);
     }
 
   }
@@ -78,7 +78,7 @@ public class SerialDispatchQueue extends InternalDispatchQueue implements UserDi
 
     try {
 
-      taskQueue.poll().run();
+      blockQueue.poll().run();
 
     }
     catch(Throwable e) {
@@ -91,7 +91,7 @@ public class SerialDispatchQueue extends InternalDispatchQueue implements UserDi
 
       synchronized(this) {
 
-        if(taskQueue.isEmpty() || suspended.get()) {
+        if(blockQueue.isEmpty() || suspended.get()) {
 
           logger.trace("Stopped dispatcher");
 
@@ -99,7 +99,7 @@ public class SerialDispatchQueue extends InternalDispatchQueue implements UserDi
         }
         else {
 
-          target.execute(this::dispatch);
+          target.dispatch(this::dispatch);
         }
 
       }

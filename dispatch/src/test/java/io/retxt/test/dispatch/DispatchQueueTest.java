@@ -40,13 +40,13 @@ public class DispatchQueueTest {
 
 
 
-  class WaitingRunnable implements Runnable {
+  class WaitingBlock implements Block {
 
     private String name;
     private long sleepTimeMS;
     private AtomicBoolean executed = new AtomicBoolean();
 
-    public WaitingRunnable(String name, long sleepTime, TimeUnit timeUnit) {
+    public WaitingBlock(String name, long sleepTime, TimeUnit timeUnit) {
       this.name = name;
       this.sleepTimeMS = timeUnit.toMillis(sleepTime);
     }
@@ -67,12 +67,12 @@ public class DispatchQueueTest {
 
 
 
-  class SimpleRunnable implements Runnable {
+  class SimpleBlock implements Block {
 
     private String name;
     private AtomicBoolean executed = new AtomicBoolean();
 
-    public SimpleRunnable(String name) {
+    public SimpleBlock(String name) {
       this.name = name;
     }
 
@@ -89,7 +89,7 @@ public class DispatchQueueTest {
   public void testExecuteSyncTimeoutSuccess() throws InterruptedException {
 
     AtomicBoolean executed = new AtomicBoolean(false);
-    boolean result = DispatchQueues.HIGH.executeSync(10, MILLISECONDS, () -> {
+    boolean result = DispatchQueues.HIGH.dispatchSync(10, MILLISECONDS, () -> {
       try {
         Thread.sleep(100);
       }
@@ -105,7 +105,7 @@ public class DispatchQueueTest {
   public void testExecuteSyncTimeoutFail() throws InterruptedException {
 
     AtomicBoolean executed = new AtomicBoolean(false);
-    boolean result = DispatchQueues.HIGH.executeSync(100, MILLISECONDS, () -> {
+    boolean result = DispatchQueues.HIGH.dispatchSync(100, MILLISECONDS, () -> {
       try {
         Thread.sleep(10);
       }
@@ -122,14 +122,14 @@ public class DispatchQueueTest {
 
     SerialDispatchQueue queue = new SerialDispatchQueue(DispatchQueues.HIGH);
 
-    int taskCount = 200;
-    int exceptionTask = new Random().nextInt(taskCount);
+    int blockCount = 200;
+    int exceptionTask = new Random().nextInt(blockCount);
 
-    CountDownLatch latch = new CountDownLatch(taskCount - 1);
+    CountDownLatch latch = new CountDownLatch(blockCount - 1);
 
-    for(int c = 0; c < taskCount; ++c) {
+    for(int c = 0; c < blockCount; ++c) {
       final int finalC = c;
-      queue.execute(() -> {
+      queue.dispatch(() -> {
         if(exceptionTask == finalC) {
           throw new RuntimeException();
         }
@@ -152,14 +152,14 @@ public class DispatchQueueTest {
 
     ConcurrentDispatchQueue queue = new ConcurrentDispatchQueue(Thread.NORM_PRIORITY);
 
-    int taskCount = 200;
-    int exceptionTask = new Random().nextInt(taskCount);
+    int blockCount = 200;
+    int exceptionTask = new Random().nextInt(blockCount);
 
-    CountDownLatch latch = new CountDownLatch(taskCount - 1);
+    CountDownLatch latch = new CountDownLatch(blockCount - 1);
 
-    for(int c = 0; c < taskCount; ++c) {
+    for(int c = 0; c < blockCount; ++c) {
       final int finalC = c;
-      queue.execute(() -> {
+      queue.dispatch(() -> {
         if(exceptionTask == finalC) {
           throw new RuntimeException();
         }
@@ -182,12 +182,12 @@ public class DispatchQueueTest {
 
     ConcurrentDispatchQueue queue = new ConcurrentDispatchQueue(Thread.NORM_PRIORITY);
 
-    int taskCount = 200;
+    int blockCount = 200;
 
-    CountDownLatch latch = new CountDownLatch(taskCount);
+    CountDownLatch latch = new CountDownLatch(blockCount);
 
-    for(int c = 0; c < taskCount; ++c) {
-      queue.execute(() -> {
+    for(int c = 0; c < blockCount; ++c) {
+      queue.dispatch(() -> {
         try {
           Thread.sleep(10);
         }
@@ -210,7 +210,7 @@ public class DispatchQueueTest {
     ReentrantLock lock = new ReentrantLock();
 
     for(int c = 0; c < 200; ++c) {
-      queue.execute(() -> {
+      queue.dispatch(() -> {
         lock.lock();
         try {
           Thread.sleep(10);
@@ -224,7 +224,7 @@ public class DispatchQueueTest {
     }
 
     CountDownLatch latch = new CountDownLatch(1);
-    queue.executeBarrier(() -> {
+    queue.dispatchBarrier(() -> {
       assertThat(lock.tryLock(), is(true));
       latch.countDown();
     });
@@ -236,23 +236,23 @@ public class DispatchQueueTest {
   public void testExecuteSync() throws InterruptedException {
 
     AtomicBoolean completed = new AtomicBoolean(false);
-    DispatchQueues.LOW.executeSync(() -> completed.set(true));
+    DispatchQueues.LOW.dispatchSync(() -> completed.set(true));
     assertThat(completed.get(), is(true));
   }
 
   @Test
   public void testThreadsStartedBeforeQueueing() throws InterruptedException {
 
-    List<WaitingRunnable> objs = new ArrayList<>();
+    List<WaitingBlock> objs = new ArrayList<>();
     for(int c = 0; c < NUM_THREADS_PER_QUEUE; ++c) {
-      WaitingRunnable obj = new WaitingRunnable("" + c, 1, SECONDS);
+      WaitingBlock obj = new WaitingBlock("" + c, 1, SECONDS);
       objs.add(obj);
-      DispatchQueues.HIGH.execute(obj);
+      DispatchQueues.HIGH.dispatch(obj);
     }
 
     MILLISECONDS.sleep(1500);
 
-    for(WaitingRunnable obj : objs) {
+    for(WaitingBlock obj : objs) {
       assertThat(obj.executed.get(), is(true));
     }
 
@@ -263,20 +263,20 @@ public class DispatchQueueTest {
 
     // Fill up queue with waiting items
     for(int c = 0; c < NUM_THREADS_PER_QUEUE; ++c) {
-      DispatchQueues.HIGH.execute(new WaitingRunnable("executed task", 1, SECONDS));
+      DispatchQueues.HIGH.dispatch(new WaitingBlock("executed block", 1, SECONDS));
     }
 
     // Start threads that shouldn't get executed
-    List<WaitingRunnable> objs = new ArrayList<>();
+    List<WaitingBlock> objs = new ArrayList<>();
     for(int c = 0; c < 10; ++c) {
-      WaitingRunnable obj = new WaitingRunnable("" + c, 1, SECONDS);
+      WaitingBlock obj = new WaitingBlock("" + c, 1, SECONDS);
       objs.add(obj);
-      DispatchQueues.HIGH.execute(obj);
+      DispatchQueues.HIGH.dispatch(obj);
     }
 
     SECONDS.sleep(1);
 
-    for(WaitingRunnable obj : objs) {
+    for(WaitingBlock obj : objs) {
       assertThat(obj.executed.get(), is(false));
     }
 
@@ -285,11 +285,11 @@ public class DispatchQueueTest {
   @Test
   public void testScheduling() throws InterruptedException {
 
-    SimpleRunnable a = new SimpleRunnable("a");
-    SimpleRunnable b = new SimpleRunnable("b");
+    SimpleBlock a = new SimpleBlock("a");
+    SimpleBlock b = new SimpleBlock("b");
 
-    DispatchQueues.HIGH.executeAfter(1500, MILLISECONDS, a);
-    DispatchQueues.HIGH.executeAfter(1500, MILLISECONDS, b);
+    DispatchQueues.HIGH.dispatchAfter(1500, MILLISECONDS, a);
+    DispatchQueues.HIGH.dispatchAfter(1500, MILLISECONDS, b);
 
     SECONDS.sleep(1);
 
@@ -311,12 +311,12 @@ public class DispatchQueueTest {
 
     for(int c = 0; c < 100; ++c) {
       final int val = c;
-      queue.execute(() -> results.add(val));
+      queue.dispatch(() -> results.add(val));
     }
 
-    // Schedule block to notify when all tasks have completed
+    // Schedule block to notify when all blocks have completed
     CountDownLatch latch = new CountDownLatch(1);
-    queue.execute(latch::countDown);
+    queue.dispatch(latch::countDown);
 
     latch.await(5, SECONDS);
 
@@ -335,7 +335,7 @@ public class DispatchQueueTest {
     AtomicInteger otherFinished = new AtomicInteger(0);
     AtomicInteger groupFinished = new AtomicInteger(0);
     for(int c = 0; c < 50; ++c) {
-      group.execute(queue, () -> {
+      group.dispatch(queue, () -> {
         try {
           Thread.sleep(50);
         }
@@ -343,7 +343,7 @@ public class DispatchQueueTest {
         }
         groupFinished.incrementAndGet();
       });
-      queue.execute(otherFinished::incrementAndGet);
+      queue.dispatch(otherFinished::incrementAndGet);
     }
 
     group.waitForCompletion(5, SECONDS);
@@ -360,7 +360,7 @@ public class DispatchQueueTest {
     AtomicInteger otherFinished = new AtomicInteger(0);
     AtomicInteger groupFinished = new AtomicInteger(0);
     for(int c = 0; c < 50; ++c) {
-      group.execute(queue, () -> {
+      group.dispatch(queue, () -> {
         try {
           Thread.sleep(50);
         }
@@ -368,7 +368,7 @@ public class DispatchQueueTest {
         }
         groupFinished.incrementAndGet();
       });
-      queue.execute(otherFinished::incrementAndGet);
+      queue.dispatch(otherFinished::incrementAndGet);
     }
 
     group.waitForCompletion(5, SECONDS);
@@ -386,7 +386,7 @@ public class DispatchQueueTest {
     AtomicInteger groupFinished = new AtomicInteger(0);
     for(int c = 0; c < 100; ++c) {
       group.enter();
-      queue.execute(() -> {
+      queue.dispatch(() -> {
         try {
           Thread.sleep(10);
         }
@@ -395,7 +395,7 @@ public class DispatchQueueTest {
         groupFinished.incrementAndGet();
         group.leave();
       });
-      queue.execute(otherFinished::incrementAndGet);
+      queue.dispatch(otherFinished::incrementAndGet);
     }
 
     assertThat(group.waitForCompletion(5, SECONDS), is(true));
@@ -412,7 +412,7 @@ public class DispatchQueueTest {
     AtomicInteger groupFinished = new AtomicInteger(0);
     for(int c = 0; c < 200; ++c) {
       group.enter();
-      queue.execute(() -> {
+      queue.dispatch(() -> {
         try {
           Thread.sleep(50);
         }
@@ -421,7 +421,7 @@ public class DispatchQueueTest {
         groupFinished.incrementAndGet();
         group.leave();
       });
-      queue.execute(otherFinished::incrementAndGet);
+      queue.dispatch(otherFinished::incrementAndGet);
     }
 
     assertThat(group.waitForCompletion(5, SECONDS), is(true));
@@ -438,7 +438,7 @@ public class DispatchQueueTest {
     AtomicInteger otherFinished = new AtomicInteger(0);
     AtomicInteger groupFinished = new AtomicInteger(0);
     for(int c = 0; c < 200; ++c) {
-      group.execute(queue, () -> {
+      group.dispatch(queue, () -> {
         try {
           Thread.sleep(10);
         }
@@ -446,7 +446,7 @@ public class DispatchQueueTest {
         }
         groupFinished.incrementAndGet();
       });
-      queue.execute(otherFinished::incrementAndGet);
+      queue.dispatch(otherFinished::incrementAndGet);
     }
 
     CountDownLatch latch = new CountDownLatch(1);
@@ -467,7 +467,7 @@ public class DispatchQueueTest {
     AtomicInteger groupFinished = new AtomicInteger(0);
     for(int c = 0; c < 200; ++c) {
       group.enter();
-      queue.execute(() -> {
+      queue.dispatch(() -> {
         try {
           Thread.sleep(10);
         }
@@ -476,7 +476,7 @@ public class DispatchQueueTest {
         groupFinished.incrementAndGet();
         group.leave();
       });
-      queue.execute(otherFinished::incrementAndGet);
+      queue.dispatch(otherFinished::incrementAndGet);
     }
 
     CountDownLatch latch = new CountDownLatch(1);
@@ -496,7 +496,7 @@ public class DispatchQueueTest {
     AtomicInteger otherFinished = new AtomicInteger(0);
     AtomicInteger groupFinished = new AtomicInteger(0);
     for(int c = 0; c < 200; ++c) {
-      group.execute(queue, () -> {
+      group.dispatch(queue, () -> {
         try {
           Thread.sleep(50);
         }
@@ -504,7 +504,7 @@ public class DispatchQueueTest {
         }
         groupFinished.incrementAndGet();
       });
-      queue.execute(otherFinished::incrementAndGet);
+      queue.dispatch(otherFinished::incrementAndGet);
     }
 
     CountDownLatch latch = new CountDownLatch(1);
@@ -525,7 +525,7 @@ public class DispatchQueueTest {
     AtomicInteger groupFinished = new AtomicInteger(0);
     for(int c = 0; c < 200; ++c) {
       group.enter();
-      queue.execute(() -> {
+      queue.dispatch(() -> {
         try {
           Thread.sleep(50);
         }
@@ -534,7 +534,7 @@ public class DispatchQueueTest {
         groupFinished.incrementAndGet();
         group.leave();
       });
-      queue.execute(otherFinished::incrementAndGet);
+      queue.dispatch(otherFinished::incrementAndGet);
     }
 
     CountDownLatch latch = new CountDownLatch(1);
@@ -552,7 +552,7 @@ public class DispatchQueueTest {
     DispatchGroup group = new DispatchGroup();
 
     for(int c = 0; c < 50; ++c) {
-      group.execute(queue, () -> {
+      group.dispatch(queue, () -> {
         try {
           Thread.sleep(50);
         }
@@ -570,7 +570,7 @@ public class DispatchQueueTest {
     assertThat(latch1.await(5, SECONDS), is(true));
 
     CountDownLatch latch2 = new CountDownLatch(1);
-    group.execute(queue, latch2::countDown);
+    group.dispatch(queue, latch2::countDown);
     assertThat(latch2.await(5, SECONDS), is(true));
 
     assertThat(notified.get(), is(1));

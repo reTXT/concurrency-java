@@ -30,7 +30,7 @@ public class DelayCondition extends Condition {
 
   @Override
   public void evaluateForOperation(AdvancedOperation operation, Consumer<Result> completion) {
-    DispatchQueues.HIGH.executeAfter(timeout, timeUnit, () -> completion.accept(Result.SATISFIED));
+    DispatchQueues.HIGH.dispatchAfter(timeout, timeUnit, () -> completion.accept(Result.SATISFIED));
   }
 
 }

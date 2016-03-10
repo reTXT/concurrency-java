@@ -6,7 +6,7 @@ package io.retxt.dispatch;
  * <p>
  * Created by kdubb on 1/29/16.
  */
-public class DefaultPlatformQueues implements PlatformQueues {
+class DefaultPlatformQueues implements PlatformQueues {
 
   @Override
   public ManualDispatchQueue createMainQueue() {

@@ -1,23 +1,22 @@
 package io.retxt.dispatch;
 
-import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 
 
 /**
  * Primary dispatch queue interface.
- *
+ * <p>
  * Created by kdubb on 11/21/14.
  */
-public interface DispatchQueue extends Executor {
+public interface DispatchQueue {
 
-  void executeSync(Runnable task);
+  void dispatchSync(Block block);
 
-  boolean executeSync(long timeout, TimeUnit timeUnit, Runnable task);
+  boolean dispatchSync(long timeout, TimeUnit timeUnit, Block block);
 
-  void execute(Runnable task);
+  void dispatch(Block block);
 
-  void executeAfter(long time, TimeUnit timeUnit, Runnable runnable);
+  void dispatchAfter(long time, TimeUnit timeUnit, Block block);
 
 }

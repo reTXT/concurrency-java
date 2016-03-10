@@ -25,12 +25,12 @@ public class DispatchGroup {
 
   private static class Notification {
 
-    Runnable runnable;
     DispatchQueue queue;
+    Block block;
 
-    Notification(DispatchQueue queue, Runnable runnable) {
-      this.runnable = runnable;
+    Notification(DispatchQueue queue, Block block) {
       this.queue = queue;
+      this.block = block;
     }
 
   }
@@ -44,9 +44,9 @@ public class DispatchGroup {
   public DispatchGroup() {
   }
 
-  public synchronized void setNotification(DispatchQueue notificationQueue, Runnable runnable) {
+  public synchronized void setNotification(DispatchQueue notificationQueue, Block block) {
 
-    notifications.add(new Notification(notificationQueue, runnable));
+    notifications.add(new Notification(notificationQueue, block));
 
     if(count.get() == 0) {
       broadcastNotifications();
@@ -80,14 +80,14 @@ public class DispatchGroup {
 
   }
 
-  public void execute(DispatchQueue queue, Runnable runnable) {
+  public void dispatch(DispatchQueue queue, Block block) {
 
     enter();
 
-    queue.execute(() -> {
+    queue.dispatch(() -> {
       try {
 
-        runnable.run();
+        block.run();
 
       }
       finally {
@@ -104,7 +104,7 @@ public class DispatchGroup {
   private synchronized void broadcastNotifications() {
 
     for(Notification notification : notifications) {
-      notification.queue.execute(notification.runnable);
+      notification.queue.dispatch(notification.block);
     }
 
     notifications.clear();

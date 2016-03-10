@@ -38,27 +38,40 @@ abstract class InternalDispatchQueue implements DispatchQueue {
 
   static ThreadPoolExecutor executor = createExecutor();
 
-  protected abstract void _execute(Runnable runnable);
+  protected abstract void _dispatch(Block block);
 
-  protected void _executeAfter(long time, TimeUnit timeUnit, Runnable task) {
-    scheduledService.schedule(() -> this.execute(task), time, timeUnit);
+  protected CountDownLatch _dispatchSync(Block block) {
+    CountDownLatch completionLatch = new CountDownLatch(1);
+    _dispatch(() -> {
+      try {
+        block.run();
+      }
+      finally {
+        completionLatch.countDown();
+      }
+    });
+    return completionLatch;
+  }
+
+  protected void _dispatchAfter(long time, TimeUnit timeUnit, Block block) {
+    scheduledService.schedule(() -> this.dispatch(block), time, timeUnit);
   }
 
   @Override
-  public void execute(Runnable runnable) {
-    _execute(runnable);
+  public void dispatch(Block block) {
+    _dispatch(block);
   }
 
   @Override
-  public void executeAfter(long time, TimeUnit timeUnit, Runnable task) {
-    _executeAfter(time, timeUnit, task);
+  public void dispatchAfter(long time, TimeUnit timeUnit, Block block) {
+    _dispatchAfter(time, timeUnit, block);
   }
 
   @Override
-  public void executeSync(Runnable runnable) {
+  public void dispatchSync(Block block) {
     while(true) {
       try {
-        _executeSync(runnable).await();
+        _dispatchSync(block).await();
         return;
       }
       catch(InterruptedException ignored) {
@@ -67,27 +80,14 @@ abstract class InternalDispatchQueue implements DispatchQueue {
   }
 
   @Override
-  public boolean executeSync(long timeout, TimeUnit timeUnit, Runnable runnable) {
+  public boolean dispatchSync(long timeout, TimeUnit timeUnit, Block block) {
     while(true) {
       try {
-        return _executeSync(runnable).await(timeout, timeUnit);
+        return _dispatchSync(block).await(timeout, timeUnit);
       }
       catch(InterruptedException ignored) {
       }
     }
-  }
-
-  private CountDownLatch _executeSync(Runnable runnable) {
-    CountDownLatch completionLatch = new CountDownLatch(1);
-    _execute(() -> {
-      try {
-        runnable.run();
-      }
-      finally {
-        completionLatch.countDown();
-      }
-    });
-    return completionLatch;
   }
 
   public static ThreadPoolExecutor createExecutor() {
@@ -108,7 +108,7 @@ abstract class InternalDispatchQueue implements DispatchQueue {
 
   static class BacklogTransferQueue extends LinkedTransferQueue<Runnable> implements RejectedExecutionHandler {
 
-    PriorityBlockingQueue<QueuedTask> backlogQueue = new PriorityBlockingQueue<>(50, Ordering.natural());
+    PriorityBlockingQueue<QueuedBlock> backlogQueue = new PriorityBlockingQueue<>(50, Ordering.natural());
 
     @Override
     public boolean offer(Runnable r) {
@@ -144,26 +144,27 @@ abstract class InternalDispatchQueue implements DispatchQueue {
 
     @Override
     public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-      backlogQueue.add((QueuedTask) r);
+      backlogQueue.add((QueuedBlock) r);
     }
+
   }
 
 
 
   /**
-   * Priority/FIFO ordered Runnable wrapper.
+   * Priority/FIFO ordered Block wrapper.
    * <p>
    * Created by kdubb on 11/21/14.
    */
-  static class QueuedTask implements Runnable, Comparable<QueuedTask> {
+  static class QueuedBlock implements Runnable, Comparable<QueuedBlock> {
 
     interface Listener {
 
-      void scheduled(QueuedTask task);
+      void scheduled(QueuedBlock block);
 
-      void enter(QueuedTask task);
+      void enter(QueuedBlock block);
 
-      void exit(QueuedTask task);
+      void exit(QueuedBlock block);
 
     }
 
@@ -171,14 +172,14 @@ abstract class InternalDispatchQueue implements DispatchQueue {
 
     private static AtomicLong currentSequence = new AtomicLong();
 
-    protected Runnable work;
+    protected Block block;
 
     protected Integer priority;
     protected Long sequence;
     protected Listener listener;
 
-    QueuedTask(Runnable work, int priority, Listener listener) {
-      this.work = work;
+    QueuedBlock(Block block, int priority, Listener listener) {
+      this.block = block;
       this.sequence = currentSequence.incrementAndGet();
       this.priority = priority;
       this.listener = listener;
@@ -189,7 +190,7 @@ abstract class InternalDispatchQueue implements DispatchQueue {
     }
 
     @Override
-    public int compareTo(QueuedTask another) {
+    public int compareTo(QueuedBlock another) {
       int res = priority.compareTo(another.priority);
       if(res != 0) {
         return res;
@@ -205,14 +206,21 @@ abstract class InternalDispatchQueue implements DispatchQueue {
         listener.enter(this);
       }
 
-      Thread.currentThread().setPriority(priority);
+      Thread thread = Thread.currentThread();
+
+      thread.setPriority(priority);
       try {
 
-        work.run();
+        block.run();
+
+      }
+      catch(Throwable e) {
+
+        thread.getUncaughtExceptionHandler().uncaughtException(thread, e);
 
       }
       finally {
-        Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
+        thread.setPriority(Thread.NORM_PRIORITY);
         if(listener != null) {
           listener.exit(this);
         }
@@ -229,7 +237,7 @@ abstract class InternalDispatchQueue implements DispatchQueue {
 /**
  * Global (concurrent) dispatch queue
  * <p>
- * Executes tasks concurrently on a global priority based thread pool.
+ * Executes blocks concurrently on a global priority based thread pool.
  * <p>
  * Created by kdubb on 11/21/14.
  */
@@ -242,8 +250,8 @@ class GlobalDispatchQueue extends InternalDispatchQueue implements DispatchQueue
   }
 
   @Override
-  public void _execute(Runnable runnable) {
-    executor.execute(new QueuedTask(runnable, priority.getThreadPriority(), null));
+  public void _dispatch(Block block) {
+    executor.execute(new QueuedBlock(block, priority.getThreadPriority(), null));
   }
 
 }

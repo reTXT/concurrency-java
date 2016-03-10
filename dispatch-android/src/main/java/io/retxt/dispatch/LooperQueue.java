@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 
 /**
- * Dispatch queue to run tasks on a {@link Looper} via an attached Handler.
+ * Dispatch queue to execute blocks on a {@link Looper} via an attached Handler.
  * <p>
  * Created by kdubb on 1/28/16.
  */
@@ -21,13 +21,13 @@ public class LooperQueue extends InternalDispatchQueue {
   }
 
   @Override
-  public void _execute(Runnable task) {
-    handler.post(task);
+  public void _dispatch(Block block) {
+    handler.post(new RunnableBlock(block));
   }
 
   @Override
-  public void _executeAfter(long time, TimeUnit timeUnit, Runnable task) {
-    handler.postDelayed(task, timeUnit.toMillis(time));
+  public void _dispatchAfter(long time, TimeUnit timeUnit, Block block) {
+    handler.postDelayed(new RunnableBlock(block), timeUnit.toMillis(time));
   }
 
 }

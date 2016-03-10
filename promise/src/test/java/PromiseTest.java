@@ -47,7 +47,7 @@ public class PromiseTest {
     List<Integer> values = new ArrayList<>();
 
     Promise<Integer> p = new Promise<Integer>((val, error) -> {
-      DispatchQueues.HIGH.executeAfter(100, MILLISECONDS, () -> {
+      DispatchQueues.HIGH.dispatchAfter(100, MILLISECONDS, () -> {
         values.add(1);
         val.call(2);
       });

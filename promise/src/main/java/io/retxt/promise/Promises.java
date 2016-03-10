@@ -28,7 +28,7 @@ public class Promises {
 
   public static <P> Promise<P> delay(long timeout, TimeUnit timeUnit, Supplier<P> body) {
     return new Promise<>((Sealant<Function<Resolution<P>>>) resolver -> {
-      DispatchQueues.HIGH.executeAfter(timeout, timeUnit, () -> {
+      DispatchQueues.HIGH.dispatchAfter(timeout, timeUnit, () -> {
         try {
           resolver.call(Resolution.fulfilled(body.supply()));
         }
@@ -41,7 +41,7 @@ public class Promises {
 
   public static <P> Promise<P> delay(long timeout, TimeUnit timeUnit, P value) {
     return new Promise<>((Sealant<Function<Resolution<P>>>) resolver -> {
-      DispatchQueues.HIGH.executeAfter(timeout, timeUnit, () -> {
+      DispatchQueues.HIGH.dispatchAfter(timeout, timeUnit, () -> {
         resolver.call(Resolution.fulfilled(value));
       });
     });
@@ -49,7 +49,7 @@ public class Promises {
 
   public static <P> Promise<P> dispatch(DispatchQueue on, Supplier<P> body) {
     return new Promise<>((Sealant<Function<Resolution<P>>>) resolver -> {
-      on.execute(() -> {
+      on.dispatch(() -> {
         try {
           resolver.call(Resolution.fulfilled(body.supply()));
         }

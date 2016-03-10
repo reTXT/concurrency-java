@@ -17,27 +17,39 @@ import java.util.concurrent.TimeUnit;
  */
 public class ManualDispatchQueue extends InternalDispatchQueue {
 
-  BlockingQueue<Runnable> taskQueue = new ArrayBlockingQueue<>(50);
+  BlockingQueue<Block> blockQueue = new ArrayBlockingQueue<>(50);
 
   @Override
-  protected void _execute(Runnable runnable) {
-    taskQueue.add(runnable);
+  protected void _dispatch(Block block) {
+    blockQueue.add(block);
   }
 
-  public void drain(long timeout, TimeUnit timeUnit) throws InterruptedException {
+  public void drainAvailable(long timeout, TimeUnit timeUnit) throws InterruptedException {
 
-    Runnable task;
-    while((task = taskQueue.poll(timeout, timeUnit)) != null) {
-      task.run();
+    Block block;
+    while((block = blockQueue.poll(timeout, timeUnit)) != null) {
+      try {
+        block.run();
+      }
+      catch(Throwable t) {
+        Thread thread = Thread.currentThread();
+        Thread.currentThread().getUncaughtExceptionHandler().uncaughtException(thread, t);
+      }
     }
 
   }
 
   public void drainAvailable() {
 
-    Runnable task;
-    while((task = taskQueue.poll()) != null) {
-      task.run();
+    Block block;
+    while((block = blockQueue.poll()) != null) {
+      try {
+        block.run();
+      }
+      catch(Throwable t) {
+        Thread thread = Thread.currentThread();
+        Thread.currentThread().getUncaughtExceptionHandler().uncaughtException(thread, t);
+      }
     }
 
   }
@@ -47,9 +59,11 @@ public class ManualDispatchQueue extends InternalDispatchQueue {
 
     while(true) {
       try {
-        taskQueue.take().run();
+        blockQueue.take().run();
       }
-      catch(InterruptedException ignored) {
+      catch(Throwable t) {
+        Thread thread = Thread.currentThread();
+        Thread.currentThread().getUncaughtExceptionHandler().uncaughtException(thread, t);
       }
     }
 

@@ -81,7 +81,7 @@ public class OperationQueue {
 
       logger.trace("Executing operation: {}", operation.getName());
 
-      executionQueue.execute(operation::execute);
+      executionQueue.dispatch(operation::execute);
     }
 
   }
