@@ -11,6 +11,7 @@ Advanced Java Concurrency Primitives
 * Dispatch Queue Groups
 * Dispatch Barriers
 * Android Support (currently requires [retrolambda](https://github.com/orfjackal/retrolambda))
+
 ### Implementation
 All dispatch queues are implemented in 100% pure java using the standard Java 7 concurrency primitives. Global & Concurrent dispatch queues are implemented using a common priority based thread pool. Serial dispatch queues are implemented on top of an existing dispatch queue.
 
