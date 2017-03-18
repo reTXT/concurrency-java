@@ -43,7 +43,7 @@ io.retxt.concurrency:dispatch-android:${version}
 * Defaults to executing on main queue but easily redirectable to a specific or background queue
 
 ### Implementation
-Promises are implemented via the dispatch queues are there are 100% pure Java and provide tight integration with Operations as well.
+Promises are implemented via the dispatch queues and they are 100% pure Java and provide tight integration with Operations as well.
 
 ### Availability
 Maven (snapshots in oss.jfrog.org & oss.sonatype.org)
@@ -70,7 +70,7 @@ io.retxt.concurrency:promise:${version}
   * Very similar to those described in [WWDC 2015 - Session #226](https://developer.apple.com/videos/play/wwdc2015-226/)
   * Conditions - Required to bet met before operation can be executed
     * Examples
-      * Mutually Exclusion - Ensure only one instance of operations with this condition can execute simulataneously
+      * Mutual Exclusion - Ensure only one instance of operations with this condition can execute simulataneously
       * No Cancelled Dependencies - Ensure operation executes only if no dependencies were cancelled
       * Delay - Delay start of operation for a specific time period
     * Easy creation of new conditions such as network reachability or UI modal exclusion
